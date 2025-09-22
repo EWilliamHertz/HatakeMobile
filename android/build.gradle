@@ -1,23 +1,25 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
 buildscript {
     ext {
-        buildToolsVersion = "33.0.0"
+        buildToolsVersion = "34.0.0"
         minSdkVersion = 21
-        compileSdkVersion = 33
-        targetSdkVersion = 33
+        compileSdkVersion = 34
+        targetSdkVersion = 34
+        kotlinVersion = "1.8.0" 
         ndkVersion = "23.1.7779620"
     }
     repositories {
+        // These are the repositories Gradle will search for plugins.
         google()
         mavenCentral()
-        maven {
-            // All of React Native (JS, Android binaries) is installed from npm
-            url new File(rootProject.projectDir.parentFile, 'node_modules/react-native/android')
-        }
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:7.3.1")
-        classpath("com.facebook.react:react-native-gradle-plugin")
-        classpath("com.google.gms:google-services:4.3.15")
+        // These are the actual plugins Gradle needs to build.
+        classpath("com.android.tools.build:gradle:8.1.1")
+        classpath("com.facebook.react:react-native-gradle-plugin") // This is the plugin that was failing
+        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
+        classpath 'com.google.gms:google-services:4.4.1'
     }
 }
 
@@ -25,15 +27,19 @@ allprojects {
     repositories {
         maven {
             // All of React Native (JS, Android binaries) is installed from npm
-            url new File(rootProject.projectDir.parentFile, 'node_modules/react-native/android')
+            url("$rootDir/../node_modules/react-native/android")
         }
         maven {
-            // Android JSC is installed from npm
-            url new File(rootProject.projectDir.parentFile, 'node_modules/jsc-android/dist')
+            // Other native modules from node_modules
+            url("$rootDir/../node_modules")
         }
-        mavenLocal()
         google()
         mavenCentral()
         maven { url 'https://www.jitpack.io' }
     }
 }
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
+
