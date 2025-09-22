@@ -5,12 +5,20 @@
 
 echo "🚀 Starting HatakeSocial Mobile App Build..."
 
+# Clean the project
+echo "🧹 Cleaning project..."
+rm -rf node_modules package-lock.json
+npm install
+
 # Set Java 11 environment
 export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 export PATH=$JAVA_HOME/bin:$PATH
 
 echo "☕ Java version:"
 java -version
+
+echo "NODE version:"
+node -v
 
 # Navigate to android directory
 cd android
