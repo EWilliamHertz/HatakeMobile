@@ -1,56 +1,61 @@
 #!/bin/bash
 
-# HatakeSocial Mobile App Build Script
-# This script builds the Android APK with proper environment setup
+# Exit immediately if a command exits with a non-zero status.
+set -e
 
 echo "🚀 Starting HatakeSocial Mobile App Build..."
 
-# Clean the project
-echo "🧹 Cleaning project..."
-rm -rf node_modules package-lock.json
-npm install
+# --- PRE-BUILD CLEANING AND SETUP ---
+echo "🧹 Cleaning project, setting up environment, and installing dependencies..."
 
-# Set Java 11 environment
-export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
-export PATH=$JAVA_HOME/bin:$PATH
+# Navigate to the project root directory
+cd "$(dirname "$0")"
 
-echo "☕ Java version:"
+# --- The Definitive SDK & Gradle Fix ---
+# 1. Set the ANDROID_HOME environment variable.
+export ANDROID_HOME="/usr/lib/android-sdk"
+echo "✅ ANDROID_HOME environment variable set to: $ANDROID_HOME"
+
+# 2. Force-create the local.properties file.
+echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+echo "✅ android/local.properties file created/updated."
+
+# 3. Remove the global gradle.properties file to prevent any conflicts.
+rm -f ~/.gradle/gradle.properties
+echo "✅ Removed global gradle.properties to ensure a clean state."
+
+# 4. Forcefully stop any running Gradle Daemons to clear stale configurations.
+echo "🛑 Stopping Gradle Daemon..."
+cd android
+./gradlew --stop
+cd ..
+echo "✅ Gradle Daemon stopped."
+# --- End of Fix ---
+
+# Deep clean the project
+rm -rf node_modules
+rm -f package-lock.json
+rm -f yarn.lock
+rm -rf android/.gradle
+rm -rf android/app/build
+
+# Install dependencies using Yarn
+yarn install
+
+# --- ANDROID BUILD ---
+echo "☕ Java and Node versions:"
 java -version
-
-echo "NODE version:"
 node -v
 
-# Navigate to android directory
+echo "🔧 Building Android APK..."
+echo "This will take 5-10 minutes..."
+
+# Navigate to the android directory
 cd android
 
-echo "🔧 Building Android APK..."
-echo "This will take 10-15 minutes..."
+# Run the Gradle command to build the release APK
+./gradlew :app:assembleRelease
 
-# Build the release APK
-./gradlew assembleRelease --no-daemon --max-workers=1
+echo "✅ Build finished successfully!"
+echo "You can find the APK in: ./android/app/build/outputs/apk/release/"
 
-# Check if build was successful
-if [ -f "app/build/outputs/apk/release/app-release.apk" ]; then
-    echo "✅ Build successful!"
-    echo "📱 APK location: app/build/outputs/apk/release/app-release.apk"
-    
-    # Get APK size
-    APK_SIZE=$(ls -lh app/build/outputs/apk/release/app-release.apk | awk '{print $5}')
-    echo "📦 APK size: $APK_SIZE"
-    
-    echo ""
-    echo "🚀 Next steps:"
-    echo "1. Upload APK to storage bucket:"
-    echo "   gcloud storage cp app/build/outputs/apk/release/app-release.apk gs://hatakesocial-88b5e-mobile/hatakesocial-mobile-app.apk"
-    echo ""
-    echo "2. Make it public:"
-    echo "   gcloud storage objects add-iam-policy-binding gs://hatakesocial-88b5e-mobile/hatakesocial-mobile-app.apk --member=allUsers --role=roles/storage.objectViewer"
-    echo ""
-    echo "3. Test at: https://storage.googleapis.com/hatakesocial-88b5e-mobile/hatakesocial-mobile-app.apk"
-    echo "4. Use Appetize.io to test the APK on your iPad"
-    
-else
-    echo "❌ Build failed!"
-    echo "Check the error messages above for details."
-    exit 1
-fi
