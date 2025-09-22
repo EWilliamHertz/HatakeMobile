@@ -1,0 +1,13 @@
+# Dependencies
+/node_modules
+
+# Build artifacts
+/android/app/build
+/ios/build
+
+# Other common files to ignore
+.DS_Store
+*.apk
+*.aab
+*.ipa
+.env
